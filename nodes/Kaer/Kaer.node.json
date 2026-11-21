@@ -1,0 +1,22 @@
+{
+	"node": "n8n-nodes-kaer.kaer",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Utility", "Development"],
+	"alias": ["Web Search", "Search API", "SERP"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/Kaer-AI/n8n-nodes-kaer?tab=readme-ov-file#credentials"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/Kaer-AI/n8n-nodes-kaer?tab=readme-ov-file"
+			},
+			{
+				"url": "https://api.kaer.ai/docs/search"
+			}
+		]
+	}
+}

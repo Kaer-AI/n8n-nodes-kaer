@@ -1,0 +1,53 @@
+{
+	"name": "Kaer search: one item per result",
+	"nodes": [
+		{
+			"parameters": {},
+			"id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+			"name": "When clicking 'Execute workflow'",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"jsCode": "return [\n  { json: { query: 'energy price cap january' } },\n  { json: { query: 'school term dates england' } },\n];"
+			},
+			"id": "6a1d2e3f-4b5c-4d6e-9f70-8b9c0d1e2f30",
+			"name": "Queries",
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [220, 0]
+		},
+		{
+			"parameters": {
+				"resource": "search",
+				"operation": "search",
+				"query": "={{ $json.query }}",
+				"lane": "fast",
+				"numResults": 5,
+				"simplify": true,
+				"options": {
+					"includeDomains": "gov.uk"
+				}
+			},
+			"id": "7b2e3f40-5c6d-4e7f-a081-9c0d1e2f3041",
+			"name": "Kaer",
+			"type": "n8n-nodes-kaer.kaer",
+			"typeVersion": 1,
+			"position": [440, 0]
+		}
+	],
+	"connections": {
+		"When clicking 'Execute workflow'": {
+			"main": [[{ "node": "Queries", "type": "main", "index": 0 }]]
+		},
+		"Queries": {
+			"main": [[{ "node": "Kaer", "type": "main", "index": 0 }]]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	}
+}
