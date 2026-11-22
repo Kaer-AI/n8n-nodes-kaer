@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-kaer",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "n8n node for the Kaer Search API: search the web from a workflow or an AI Agent, with lanes from Kaer's own index to deep, re-ranked results with page text.",
 	"license": "MIT",
 	"homepage": "https://github.com/Kaer-AI/n8n-nodes-kaer",

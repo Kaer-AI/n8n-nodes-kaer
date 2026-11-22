@@ -177,6 +177,6 @@ Releases are published to npm from GitHub Actions with a provenance statement. R
 
 ## Version history
 
-### 0.1.0
+### 0.1.1
 
 First release: the Search resource with the Search the web operation, the Kaer API credential, and AI Agent tool support.
