@@ -2,7 +2,7 @@
 
 This is an n8n community node for the [Kaer Search API](https://api.kaer.ai/docs/search). It searches the web from a workflow, or from an AI Agent as a tool, and returns ranked results with titles, URLs and snippets. On the Deep lane, results also carry the page's main text.
 
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/n8n-community-license) workflow automation platform.
 
 - [Installation](#installation)
 - [Credentials](#credentials)
@@ -28,7 +28,7 @@ This is an n8n community node for the [Kaer Search API](https://api.kaer.ai/docs
 
 Once the node is verified, you can also find it in the nodes panel: search for **Kaer**.
 
-See the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) for details.
+See the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation-and-management) for details.
 
 ### Manual installation
 
@@ -36,10 +36,12 @@ For self-hosted n8n, install the package in the folder n8n loads community nodes
 
 ```sh
 cd ~/.n8n/nodes
-npm install n8n-nodes-kaer
+npm install --omit=peer n8n-nodes-kaer
 ```
 
-For Docker and queue mode, follow [manual installation](https://docs.n8n.io/integrations/community-nodes/installation/manual-install/) in the n8n docs.
+`--omit=peer` stops npm installing `n8n-workflow`, which n8n already provides; n8n's own installer leaves it out too. Without the flag, npm also tries to build a native module that the official n8n Docker image can't compile, and the install fails.
+
+For Docker and queue mode, follow [manual installation](https://docs.n8n.io/integrations/community-nodes/installation-and-management/manual-installation) in the n8n docs, keeping `--omit=peer` on the install command.
 
 ## Credentials
 
@@ -92,11 +94,11 @@ Each lane has its own price per query. See [search pricing](https://api.kaer.ai/
 
 | Option | Description |
 | --- | --- |
-| Include Domains | Only return results from these hosts or their subdomains, up to 20. Separate hosts with commas, for example `gov.uk, bbc.co.uk`. An expression that returns an array of hosts also works. A pasted address such as `https://www.gov.uk/guidance` is reduced to its host. |
+| Include Domains | Only return results from these hosts or their subdomains, up to 20. Separate hosts with commas, for example `gov.uk, bbc.co.uk`. An expression that returns an array of hosts also works. A pasted address such as `https://www.gov.uk/guidance` is reduced to its host, `www.gov.uk`. |
 | Exclude Domains | Never return results from these hosts or their subdomains, up to 20. Same format as Include Domains. |
 | Offset | Results to skip before this page. Only the Web and Fast lanes page; the others return their first page and say so in `warnings`. Wins over Page when it is above 0. |
 | Page | The page of results to return, counting from 1, in pages of Number of Results. Web and Fast lanes only. |
-| Fields | Result fields to keep: Title, URL, Snippet, Source, Published Date, Text, Text Truncated, Text Source. Leave empty to keep them all. |
+| Fields | Result fields to keep: Title, URL, Snippet, Source, Published Date, Text, Text Truncated, Text Source. Left empty, Simplify keeps Title, URL, Snippet, Published Date and Text; with Simplify off, every field comes back. |
 
 ## Output
 
@@ -111,7 +113,7 @@ With **Simplify** on, the node returns one item per result:
 }
 ```
 
-`published_date` is `null` when the page has no known date. On the Deep lane each item also has `text`, the page's main text. If you pick **Fields**, each item has exactly those fields instead. When Kaer returns an instant answer (a sum, a conversion, the time) or `warnings` (for example, that a lane ignored **Page**), every item from that search also carries `answer` and `warnings`. A search with no results returns no items; turn on **Always Output Data** in the node settings if the next node should still run.
+`published_date` is `null` when the page has no known date. On the Deep lane each item also has `text`, the page's main text. If you pick **Fields**, each item has exactly those fields instead. When Kaer returns an instant answer (a sum, a conversion, the time), `warnings` (for example, that a lane ignored **Page**) or both, every item from that search carries them too. A search with no results returns no items, so an instant answer that came without results is dropped; turn **Simplify** off to keep it, or turn on **Always Output Data** in the node settings if the next node should still run.
 
 With **Simplify** off, the node returns the API response as one item, including `served_lane`, `answer` (an instant answer such as a sum or a conversion, when there is one), `warnings`, and `kaer.request_id` and `kaer.cost_usd`. The full response format is in the [Search API docs](https://api.kaer.ai/docs/search).
 
@@ -127,7 +129,7 @@ The node reports the Kaer API's own message, with the error code, the HTTP statu
 
 | Status | Codes | What to do |
 | --- | --- | --- |
-| 400 | `query_required`, `query_too_long`, `invalid_lane`, `invalid_num_results`, `invalid_paging`, `invalid_domains`, `invalid_fields` | Fix the parameter the message names. The node checks the query length and domain lists before sending. |
+| 400 | `query_required`, `query_too_long`, `invalid_lane`, `invalid_num_results`, `invalid_paging`, `invalid_domains`, `invalid_fields` | Fix the parameter the message names. Before sending, the node checks the query length and the number of hosts in each domain list. |
 | 401 | `missing_api_key`, `invalid_api_key` | Check the key in the credential, or create a new one. |
 | 402 | `insufficient_credits`, `monthly_limit_reached`, `key_budget_exceeded` | Top up, raise the monthly cap, or raise the key's budget. |
 | 403 | `tier_required` | Add a card under Billing for free web searches, or make the account's first top-up. |
@@ -136,7 +138,7 @@ The node reports the Kaer API's own message, with the error code, the HTTP statu
 | 429 | `rate_limit_exceeded`, `too_many_concurrent_searches` | Wait for the `Retry-After` time, or turn on **Retry On Fail** in the node settings. |
 | 502, 503, 504 | `search_failed`, `search_busy`, `search_unavailable`, `search_timeout` | Try again shortly, or use a faster lane. These are not charged. |
 
-With **Continue On Fail** on, a failed item becomes an output item with `error`, `description`, `code`, `httpCode`, `requestId` and, for 429, `retryAfterSeconds`, and the other items still run.
+With **Continue On Fail** on, a failed item becomes an output item with `error` and `description`, and the other items still run. An error from the API adds `code`, `httpCode`, `requestId` and, when the API sent a `Retry-After` header, `retryAfterSeconds`. A timeout or a network failure adds only `code`: `request_timeout` or `network_unreachable`.
 
 ## Example workflow
 
@@ -170,7 +172,7 @@ Releases are published to npm from GitHub Actions with a provenance statement. R
 - [Kaer Search API docs](https://api.kaer.ai/docs/search)
 - [Search pricing](https://api.kaer.ai/docs/search-pricing)
 - [Kaer API sign-up and keys](https://api.kaer.ai)
-- [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes)
 - Support: [support@kaer.ai](mailto:support@kaer.ai)
 
 ## Version history
